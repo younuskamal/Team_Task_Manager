@@ -1,0 +1,96 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model User {
+  id        Int       @id @default(autoincrement())
+  email     String    @unique
+  password  String
+  name      String
+  score     Int       @default(0)
+  role      String    @default("kullanıcı") // "admin" or "kullanıcı"
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // Relations
+  tasks            Task[]    @relation("UserTasks")
+  sentMessages     Message[] @relation("SentMessages")
+  receivedMessages Message[] @relation("ReceivedMessages")
+  comments         Comment[]
+  logs             Log[]
+  sessionLogs      SessionLog[]
+}
+
+model Task {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  dueDate     DateTime?
+  status      String    @default("pending") // "pending", "in-progress", "completed"
+  followUp    Boolean   @default(false)
+  deleted     Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  userId     Int
+  user       User      @relation("UserTasks", fields: [userId], references: [id], onDelete: Cascade)
+  comments   Comment[]
+  logs       Log[]
+}
+
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  createdAt  DateTime @default(now())
+  seen       Boolean  @default(false)
+  deleted    Boolean  @default(false)
+
+  // Relations
+  senderId   Int
+  receiverId Int
+  sender     User     @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id], onDelete: Cascade)
+}
+
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  
+  // Relations
+  userId Int
+  taskId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task   Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model Log {
+  id        Int      @id @default(autoincrement())
+  action    String   // "created", "updated", "deleted", "status_changed"
+  details   String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId Int?
+  taskId Int?
+  user   User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+  task   Task? @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model SessionLog {
+  id         Int      @id @default(autoincrement())
+  ip         String?
+  userAgent  String?
+  loggedInAt DateTime @default(now())
+  loggedOutAt DateTime?
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
