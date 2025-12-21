@@ -1,0 +1,11 @@
+# Ignore build outputs
+dist/** linguist-generated
+build/** linguist-generated
+out/** linguist-generated
+
+# Ignore generated HTML
+*.html linguist-generated
+
+# Force main language
+*.ts linguist-language=TypeScript
+*.tsx linguist-language=TypeScript
